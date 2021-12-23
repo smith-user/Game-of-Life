@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Game of Life</title>
+	</head>
+	<style>
+		body {
+			font-family: monospace;
+			font-size: 17px;
+		}
+	</style>
+	<body>
+		<h2>Game of Life</h2>
+		<big> Enter the coordinates (A1:AX50) or choose from the listed. </big>
+		<h4> Figures: </h4>
+		<p> - Gosper glider gun (0) </p>
+		<p> - glider (1) </p>
+		<p> - random (2) </p>
+		<p> <input type='text' id='inputData' size= '122' placeholder="input data" value="Gosper glider gun"/></p>
+		<p> <input type='button' onclick= 'run()' value='RUN' /> </p>
+		<p>A B C D E F G H I J C L M N O P Q R S T U V W X Y Z</p>
+		<canvas id="myCanvas" width="1000px" height="1000px" style="border:1px solid #c3c3c3;">
+		Your browser does not support the canvas element.</canvas>
+
+		<script>
+			let fieldSize = 50; // cells
+			let cellSize = 20;  // pixels
+			let currentField = new Array(fieldSize);
+			let nextField = new Array(fieldSize);
+			let canvas = document.getElementById("myCanvas");
+			let ctx = canvas.getContext("2d");
+			let tm;
+			function run(){
+				clearInterval(tm)
+				for (let i = 0; i < fieldSize; i++) {
+					currentField[i] = new Array(fieldSize);
+					nextField[i] = new Array(fieldSize);
+					for (let j = 0; j < fieldSize; j++) {
+						currentField[i][j] = 0;
+						nextField[i][j] = 0;
+					}
+				}
+				let begin = document.getElementById('inputData').value;
+				begin = begin.toString();
+				switch (begin) {
+					case '0':
+					case 'Gosper glider gun':
+						setParticularCells('B6 B7 C6 C7 L6 L7 L8 M5 M7 N4 N8 O4 O10 P7 Q5 Q9 R6 ' +
+								'R7 R8 S7 V4 V5 V6 W4 W5 W6 X3 X7 Z2 Z3 Z7 Z8 AJ4 AJ5 AK4 AK5');
+						break;
+					case '1':
+					case 'glider':
+						setParticularCells('A3 B4 C2 C3 C4');
+						break;
+					case '2':
+					case 'random':
+					case '':
+						setRandomCells();
+						break;
+					default:
+						setParticularCells(begin);
+						break;
+				}
+				draw();
+				tm = setInterval(nextGeneration, 200);
+			}
+
+			function setParticularCells(begin) {
+				begin = begin.split(' ');
+				for(let coordinate of begin) {
+					let x = coordinate.charCodeAt(0) - 65;
+					let y;
+					if (isNaN(coordinate[1])){
+						x = (x + 1) * 26;
+						x += coordinate.charCodeAt(1) - 65;
+						y = Number(coordinate.substring(2)) - 1;
+					} else
+						y = Number(coordinate.substring(1)) - 1;
+					currentField[x][y] = 1;
+				}
+			}
+
+			function setRandomCells() {
+				for (let i = 0; i < fieldSize; i++)
+					for (let j = 0; j < fieldSize; j++)
+						currentField[i][j] = 1 * (Math.random() > 0.5);
+			}
+
+			function draw() {
+				for(let x = 0; x < fieldSize; x++)
+					for (let y = 0; y < fieldSize; y++) {
+						if (Boolean(currentField[x][y])) {
+							ctx.fillStyle = "#000000";
+							ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+						} else {
+							ctx.fillStyle = "#FFFFFF";
+							ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+						}
+					}
+			}
+
+			function nextGeneration() {
+				for(let x = 0; x < fieldSize; x++) {
+					for (let y = 0; y < fieldSize; y++) {
+						let count = neighborCount(x, y);
+						if ( !Boolean(currentField[x][y]))
+							nextField[x][y] = Boolean(count === 3);
+						else
+							nextField[x][y] = Boolean(count === 2 || count === 3);
+					}
+				}
+				changeCurrentField();
+				draw();
+			}
+
+			function neighborCount(x, y) {
+				let count = 0;
+				for (let i = -1; i < 2; i++)
+					for (let j = -1; j < 2; j++) {
+						if ((j === 0) && (i === 0))
+							continue;
+						count += currentField[(x + i + fieldSize) % fieldSize][(y + j + fieldSize) % fieldSize];
+					}
+				return count;
+			}
+
+			function changeCurrentField() {
+				for(let x = 0; x < fieldSize; x++)
+					for (let y = 0; y < fieldSize; y++)
+						currentField[x][y] = nextField[x][y];
+			}
+		</script>
+	</body>
+</html>
